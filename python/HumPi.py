@@ -33,7 +33,7 @@ RATE = 24000
 FRAMESIZE = 512
 ne.set_num_threads(3)
 
-INITIAL_SIGNAL_AMPLITUDE = 0.2
+INITIAL_SIGNAL_AMPLITUDE = 0.08
 
 SANITY_MAX_FREQUENCYCHANGE = 0.03 #Hz per Second
 SANITY_UPPER_BOUND = 50.4
@@ -161,10 +161,10 @@ class Analyze_Hum(threading.Thread):
     
     def run(self):
         def residuals(p,x,y):
-            A, k, theta = p
+            A, k, theta , d= p
             x = x
             y = y
-            err = ne.evaluate('y - A * sin(2 * pi * k * x + theta)')
+            err = ne.evaluate('y - A * sin(2 * pi * k * x + theta)+d')
             #err = y - A * sin(2 * pi * k * x + theta)
             return err
         
@@ -173,21 +173,23 @@ class Analyze_Hum(threading.Thread):
         a = INITIAL_SIGNAL_AMPLITUDE
         b = 50
         c = 0
+        d= 0.02
         
         lastMeasurmentTime = 0
         y = self.buffer.get(RATE*MEASUREMENT_TIMEFRAME)
-        plsq = leastsq(residuals, np.array([a,b,c]),args=(x,y))
+        plsq = leastsq(residuals, np.array([a,b,c,d]),args=(x,y))
         a = plsq[0][0]
         b = plsq[0][1]
         c = plsq[0][2]
+        d = plsq[0][3]
 		
         while (not self.stopSignal.is_set()):
             analyze_start = time.time()
             y = self.buffer.get(RATE*MEASUREMENT_TIMEFRAME)
-            plsq = leastsq(residuals, np.array([a,b,c]),args=(x,y))
+            plsq = leastsq(residuals, np.array([a,b,c,d]),args=(x,y))
             if plsq[0][1] < SANITY_LOWER_BOUND or plsq[0][1] > SANITY_UPPER_BOUND:
                 print("Trying again", plsq[0][1], "looks fishy")
-                plsq = leastsq(residuals, np.array([INITIAL_SIGNAL_AMPLITUDE,50,0]),args=(x,y))
+                plsq = leastsq(residuals, np.array([INITIAL_SIGNAL_AMPLITUDE,50,0,0.02]),args=(x,y))
             if plsq[0][1] < SANITY_LOWER_BOUND or plsq[0][1] > SANITY_UPPER_BOUND:
                 print("Now got", plsq[0][1], "Buffer data is Corrupt, need new data")
                 time.sleep(MEASUREMENT_TIMEFRAME)
@@ -199,6 +201,7 @@ class Analyze_Hum(threading.Thread):
                     a = plsq[0][0]
                     b = plsq[0][1]
                     c = plsq[0][2]
+                    d = plsq[0][3]
                     lastMeasurmentTime = time.time()
                     log.store(b,lastMeasurmentTime-analyze_start)
                 else: 
