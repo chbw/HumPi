@@ -47,7 +47,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-d","--device", help="The device to use. Try some (1-10), or get one by using the 'findYourALSADevice.py script'.",  type=int)
 args = parser.parse_args()
-devices = alsaaudio.pcms(alsaaudio.PCM_CAPTURE)
+devices = alsaaudio.cards()#pcms(alsaaudio.PCM_CAPTURE)
 AUDIO_DEVICE_STRING = devices[args.device-1]
 print("Using Audio Device", AUDIO_DEVICE_STRING)
 
@@ -98,9 +98,10 @@ class Log():
         
     
 	def getoffset(self):
-		c = ntplib.NTPClient()
-		response = c.request('europe.pool.ntp.org', version=3)
-		return response.offset
+#		c = ntplib.NTPClient()
+#		response = c.request('europe.pool.ntp.org', version=3)
+#		return response.offset
+                return 0
 
 	def store(self,frequency, calculationTime):
 		currTime = time.time() +self.offset- calculationTime - MEASUREMENT_TIMEFRAME/2
@@ -132,8 +133,8 @@ class Capture_Hum (threading.Thread):
     def run(self):
         recorder=alsaaudio.PCM(alsaaudio.PCM_CAPTURE,
                        alsaaudio.PCM_NORMAL, 
-                      # u'hw:CARD=Device,DEV=0')
-                       AUDIO_DEVICE_STRING)
+                       u'hw:CARD=MID,DEV=0')
+                      # AUDIO_DEVICE_STRING)
         recorder.setchannels(CHANNELS)
         recorder.setrate(RATE)
         recorder.setformat(INFORMAT)
