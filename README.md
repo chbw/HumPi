@@ -9,8 +9,10 @@ Using a Raspberry Pi to measure the frequency of the synchronous grid of contine
 	30mV for microphone input, 1V RMS for line in
 * [Phone connector](https://en.wikipedia.org/wiki/Phone_connector_%28audio%29)
 
+Sample circuits can be found within the [HW](https://github.com/gillhofer/HumPi/tree/master/HW) directory. 
+
 ## Software requirements
-* Python2
+* Python
 * SciPy ([HowTo](http://wyolum.com/numpyscipymatplotlib-on-raspberry-pi/))
 * [numexpr](https://github.com/pydata/numexpr), alsaaudio and ntplib. You can install these via pip:
 ````
@@ -18,20 +20,20 @@ Using a Raspberry Pi to measure the frequency of the synchronous grid of contine
 ````
 ==========================
 
-### Version 0.5.1
+### Version 0.6
 
-Once started, HumPi captures the signal from an USB-Soundcard and calculates the frequency continuously by fitting a sine wave on the last second of 'sound'. Currently the data is stored to disk. In future versions it might get sent to the [netzsinus](https://github.com/netzsinus) project. 
+Once started, HumPi captures the signal from an USB-Soundcard and calculates the frequency continuously by fitting a sine on the last second of 'sound'. The frequency of this sine (= the measurment) may be stored to disc using the `--store` parameter or may be sent to [netzsinus](https://netzsin.us) using the `--sendServer` parameter. In case of sending, please also provide an API-Key by specifying the `--apikey` option as well as a meterID (`--meterid`). More information about sending can be found within the netzsinus [server documentation](https://github.com/netzsinus/defluxio-software/blob/master/README.md). If you are annoyed by the console output, there is a `--silent` option. With higher number only more important messages are given. 
+
+HumPi requires you to provide a `device` parameter as the first argument. It specifies the ALSA device to use. The parameter can be found by either try and error, or by using the [script](https://github.com/gillhofer/HumPi/blob/master/python/findYourALSADevice.py) within the python directory.
 
 ### Install & Run
 ```
 git clone https://github.com/gillhofer/HumPi.git
-./HumPi/python/HumPi.py -d 3
+./HumPi.py 3 --sendServer http://netzsin.us:8080 --apikey secretkey1 --meterid meter1 --store m.csv --silent 0
 ```
 
-Use the `-d` device parameter the specify the ALSA device. The parameter can be found by either try and error, or by using the [script](https://github.com/gillhofer/HumPi/blob/master/python/findYourALSADevice.py) within the python directory.
-
 ## TODO
-* Send data to the [netzsinus](https://github.com/netzsinus) project
-* general improvements
+* Limit the number of POST requests if data is sent.
+* store raw signal in case of an unusual power grid event
 
 
